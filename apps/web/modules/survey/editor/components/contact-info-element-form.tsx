@@ -12,6 +12,7 @@ import { ElementFormInput } from "@/modules/survey/components/element-form-input
 import { ValidationRulesEditor } from "@/modules/survey/editor/components/validation-rules-editor";
 import { Button } from "@/modules/ui/components/button";
 import { ElementToggleTable } from "@/modules/ui/components/element-toggle-table";
+import { compositeElementIsRequired } from "@/modules/ui/components/element-toggle-table/requirement";
 
 interface ContactInfoElementFormProps {
   localSurvey: TSurvey;
@@ -67,17 +68,15 @@ export const ContactInfoElementForm = ({
   ];
 
   useEffect(() => {
-    const allFieldsAreOptional = [
-      element.firstName,
-      element.lastName,
-      element.email,
-      element.phone,
-      element.company,
-    ]
-      .filter((field) => field.show)
-      .every((field) => !field.required);
-
-    updateElement(elementIdx, { required: !allFieldsAreOptional });
+    updateElement(elementIdx, {
+      required: compositeElementIsRequired([
+        element.firstName,
+        element.lastName,
+        element.email,
+        element.phone,
+        element.company,
+      ]),
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync-only effect; adding updateElement/elementIdx would loop as it writes back into the survey
   }, [element.firstName, element.lastName, element.email, element.phone, element.company]);
 

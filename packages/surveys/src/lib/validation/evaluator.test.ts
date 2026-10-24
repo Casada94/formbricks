@@ -922,6 +922,48 @@ describe("validateElementResponse", () => {
     });
   });
 
+  describe("one-of required fields", () => {
+    const element = {
+      id: "contact1",
+      type: TSurveyElementTypeEnum.ContactInfo,
+      headline: { default: "Contact" },
+      required: true,
+      firstName: { show: true, required: false, placeholder: { default: "First name" } },
+      lastName: { show: true, required: false, placeholder: { default: "Last name" } },
+      email: { show: true, required: true, orRequired: true, placeholder: { default: "Email" } },
+      phone: { show: true, required: true, orRequired: true, placeholder: { default: "Phone" } },
+      company: { show: true, required: false, placeholder: { default: "Company" } },
+    } as TSurveyContactInfoElement;
+
+    test("rejects a response that leaves every One-of field blank", () => {
+      const result = validateElementResponse(element, ["Ada", "Lovelace", "", "", ""], "en");
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].ruleId).toBe("required");
+      expect(result.errors[0].message).toBe("errors.fill_in_at_least_one_of");
+    });
+
+    test("accepts a response that fills one One-of field and leaves the other blank", () => {
+      const result = validateElementResponse(element, ["", "", "", "5551234", ""], "en");
+
+      expect(result.valid).toBe(true);
+    });
+
+    test("accepts a response that fills both One-of fields", () => {
+      const result = validateElementResponse(element, ["", "", "ada@example.com", "5551234", ""], "en");
+
+      expect(result.valid).toBe(true);
+    });
+
+    test("still checks the format of a One-of field that was filled", () => {
+      const result = validateElementResponse(element, ["", "", "not-an-email", "5551234", ""], "en");
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((error) => error.ruleId === "__implicit_email_field__")).toBe(true);
+    });
+  });
+
   describe("unknown validation rule type", () => {
     test("should handle unknown rule type gracefully", () => {
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});

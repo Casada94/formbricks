@@ -43,6 +43,7 @@ import {
   ZSurveyPictureSelectionElement,
   ZSurveyRankingElement,
   ZSurveyRatingElement,
+  ZToggleInputConfig,
 } from "./elements";
 import { validateElementLabels } from "./elements-validation";
 import { ZSurveyFollowUp } from "./follow-up";
@@ -701,13 +702,7 @@ export const ZSurveyMatrixQuestion = ZSurveyQuestionBase.extend({
  */
 export type TSurveyMatrixQuestion = z.infer<typeof ZSurveyMatrixQuestion>;
 
-const ZToggleInputConfig = z.object({
-  show: z.boolean(),
-  required: z.boolean(),
-  placeholder: ZI18nString,
-});
-
-export type TInputFieldConfig = z.infer<typeof ZToggleInputConfig>;
+export type { TInputFieldConfig } from "./elements";
 
 /**
  * @deprecated Use ZSurveyAddressElement instead. Kept for v1 API backward compatibility only.

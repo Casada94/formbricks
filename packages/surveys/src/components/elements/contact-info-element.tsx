@@ -5,6 +5,7 @@ import { type TResponseData, type TResponseTtc } from "@formbricks/types/respons
 import type { TSurveyContactInfoElement } from "@formbricks/types/surveys/elements";
 import { getLocalizedValue } from "@/lib/i18n";
 import { getUpdatedTtc, useTtc } from "@/lib/ttc";
+import { orRequiredGroupSummary } from "@/lib/validation/composite-required";
 
 interface ContactInfoElementProps {
   element: TSurveyContactInfoElement;
@@ -75,6 +76,7 @@ export function ContactInfoElement({
       label: getLocalizedValue(element.firstName.placeholder, languageCode),
       placeholder: getLocalizedValue(element.firstName.placeholder, languageCode),
       required: element.firstName.required,
+      orRequired: element.firstName.orRequired,
       show: element.firstName.show,
     },
     {
@@ -82,6 +84,7 @@ export function ContactInfoElement({
       label: getLocalizedValue(element.lastName.placeholder, languageCode),
       placeholder: getLocalizedValue(element.lastName.placeholder, languageCode),
       required: element.lastName.required,
+      orRequired: element.lastName.orRequired,
       show: element.lastName.show,
     },
     {
@@ -89,6 +92,7 @@ export function ContactInfoElement({
       label: getLocalizedValue(element.email.placeholder, languageCode),
       placeholder: getLocalizedValue(element.email.placeholder, languageCode),
       required: element.email.required,
+      orRequired: element.email.orRequired,
       show: element.email.show,
       type: "email",
     },
@@ -97,6 +101,7 @@ export function ContactInfoElement({
       label: getLocalizedValue(element.phone.placeholder, languageCode),
       placeholder: getLocalizedValue(element.phone.placeholder, languageCode),
       required: element.phone.required,
+      orRequired: element.phone.orRequired,
       show: element.phone.show,
       type: "tel",
     },
@@ -105,9 +110,13 @@ export function ContactInfoElement({
       label: getLocalizedValue(element.company.placeholder, languageCode),
       placeholder: getLocalizedValue(element.company.placeholder, languageCode),
       required: element.company.required,
+      orRequired: element.company.orRequired,
       show: element.company.show,
     },
   ];
+
+  const orSummary = orRequiredGroupSummary(element, languageCode);
+  const orGroupHint = orSummary ? t("common.at_least_one_of", { fields: orSummary }) : undefined;
 
   return (
     <form key={element.id} onSubmit={handleSubmit} className="w-full">
@@ -120,6 +129,7 @@ export function ContactInfoElement({
         onChange={handleChange}
         required={isRequired}
         requiredLabel={t("common.required")}
+        orGroupHint={orGroupHint}
         dir={dir}
         imageUrl={element.imageUrl}
         imageAltText={getLocalizedValue(element.imageAltText, languageCode)}

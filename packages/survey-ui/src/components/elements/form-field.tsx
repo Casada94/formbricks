@@ -3,6 +3,7 @@ import { ElementError, getElementErrorAria } from "@/components/general/element-
 import { ElementHeader } from "@/components/general/element-header";
 import { Input } from "@/components/general/input";
 import { Label } from "@/components/general/label";
+import { isFormFieldRequired } from "@/lib/form-field-required";
 
 /**
  * Form field configuration
@@ -16,8 +17,13 @@ export interface FormFieldConfig {
   placeholder?: string;
   /** Input type (text, email, tel, number, url, etc.) */
   type?: "text" | "email" | "tel" | "number" | "url";
-  /** Whether this field is required */
+  /** Whether this field is required on its own */
   required?: boolean;
+  /**
+   * Member of a One-of group. Two or more shown members must have at least one filled in.
+   * A single shown member is required on its own.
+   */
+  orRequired?: boolean;
   /** Whether this field should be shown */
   show?: boolean;
 }
@@ -39,6 +45,11 @@ interface FormFieldProps {
   required?: boolean;
   /** Custom label for the required indicator */
   requiredLabel?: string;
+  /**
+   * Shown when two or more fields belong to a One-of group, so the respondent knows any one of
+   * them satisfies the question. The One-of inputs point at it with aria-describedby.
+   */
+  orGroupHint?: string;
   /** Error message to display */
   errorMessage?: string;
   /** Text direction: 'ltr' (left-to-right), 'rtl' (right-to-left), or 'auto' (auto-detect from content) */
@@ -62,6 +73,7 @@ function FormField({
   onChange,
   required = false,
   requiredLabel,
+  orGroupHint,
   errorMessage,
   dir = "auto",
   disabled = false,
@@ -71,22 +83,6 @@ function FormField({
 }: Readonly<FormFieldProps>): React.JSX.Element {
   // `value` defaults to {} in the destructuring above, so it is always an object here.
   const currentValues = value;
-
-  // Determine if a field is required
-  const isFieldRequired = (field: FormFieldConfig): boolean => {
-    if (field.required) {
-      return true;
-    }
-
-    // If all fields are optional and the form is required, then fields should be required
-    const visibleFields = fields.filter((f) => f.show !== false);
-    const allOptional = visibleFields.every((f) => !f.required);
-    if (allOptional && required) {
-      return true;
-    }
-
-    return false;
-  };
 
   // Handle field value change
   const handleFieldChange = (fieldId: string, fieldValue: string): void => {
@@ -110,6 +106,7 @@ function FormField({
   // a confidently wrong description, which is worse than none. The inputs still expose
   // aria-invalid, so the state is conveyed, and the live region announces the message itself.
   const errorAria = getElementErrorAria(elementId, errorMessage);
+  const orHintId = `${elementId}-or-requirement`;
 
   return (
     <div className="w-full space-y-4" id={elementId} dir={dir}>
@@ -124,12 +121,18 @@ function FormField({
         videoUrl={videoUrl}
       />
 
+      {orGroupHint ? (
+        <p id={orHintId} className="label-description">
+          {orGroupHint}
+        </p>
+      ) : null}
+
       {/* Form Fields */}
       <div className="relative" data-element-input>
         <ElementError errorMessage={errorMessage} dir={dir} id={errorAria.errorId} />
         <div className="space-y-3">
           {visibleFields.map((field) => {
-            const fieldRequired = isFieldRequired(field);
+            const fieldRequired = isFormFieldRequired(field, fields, required);
             const fieldValue = currentValues[field.id] ?? "";
             const fieldInputId = `${elementId}-${field.id}`;
 
@@ -157,6 +160,7 @@ function FormField({
                   disabled={disabled}
                   dir={dir}
                   aria-invalid={errorAria.ariaInvalid || undefined}
+                  aria-describedby={field.orRequired && orGroupHint ? orHintId : undefined}
                 />
               </div>
             );

@@ -6016,6 +6016,9 @@ components:
           type: boolean
         required:
           type: boolean
+        orRequired:
+          type: boolean
+          description: When true on two or more shown fields of the same question, the respondent must fill in at least one of those fields and may fill in more than one. A single shown field marked this way is required on its own. Omitted means the field is not part of that group.
         placeholder:
           $ref: '#/components/schemas/TranslatableText'
       additionalProperties: false

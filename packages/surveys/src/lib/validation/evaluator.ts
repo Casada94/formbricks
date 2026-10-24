@@ -2,15 +2,18 @@ import type { TFunction } from "i18next";
 import type { TResponseData, TResponseDataValue } from "@formbricks/types/responses";
 import type { TSurveyElement } from "@formbricks/types/surveys/elements";
 import { TSurveyElementTypeEnum } from "@formbricks/types/surveys/elements";
-import type {
-  TAddressField,
-  TContactInfoField,
-  TValidationError,
-  TValidationErrorMap,
-  TValidationResult,
-  TValidationRule,
+import {
+  type TAddressField,
+  type TContactInfoField,
+  type TValidationError,
+  type TValidationErrorMap,
+  type TValidationResult,
+  type TValidationRule,
+  ZAddressField,
+  ZContactInfoField,
 } from "@formbricks/types/surveys/validation-rules";
 import { getLocalizedValue, getTranslations } from "@/lib/i18n";
+import { stripTrailingLabelColon, validateOrRequiredGroup } from "./composite-required";
 import { validators } from "./validators";
 
 /**
@@ -76,23 +79,6 @@ const getFieldLabel = (
 };
 
 /**
- * Strip trailing whitespace and colons from a field label.
- *
- * The label comes from the author's placeholder, which often already ends with a colon
- * ("Nombre:"), so the separator we append would otherwise render a double colon. Scanning
- * backwards keeps this linear in the label's length.
- */
-const stripTrailingColon = (label: string): string => {
-  let end = label.length;
-  while (end > 0) {
-    const char = label[end - 1];
-    if (char !== ":" && char !== "：" && char.trim() !== "") break;
-    end--;
-  }
-  return label.slice(0, end);
-};
-
-/**
  * Get default error message from rule or validator
  */
 const getDefaultErrorMessage = (
@@ -111,7 +97,7 @@ const getDefaultErrorMessage = (
   // For field-specific validation, prepend the field name
   if (rule.field) {
     const fieldLabel = getFieldLabel(element, rule.field, languageCode);
-    const normalizedLabel = fieldLabel ? stripTrailingColon(fieldLabel) : undefined;
+    const normalizedLabel = fieldLabel ? stripTrailingLabelColon(fieldLabel) : undefined;
     if (normalizedLabel) {
       return `${normalizedLabel}: ${baseMessage}`;
     }
@@ -420,23 +406,14 @@ const getFieldValue = (
   }
 
   if (element.type === TSurveyElementTypeEnum.Address && Array.isArray(elementValue)) {
-    const addressFieldOrder: TAddressField[] = [
-      "addressLine1",
-      "addressLine2",
-      "city",
-      "state",
-      "zip",
-      "country",
-    ];
-    const fieldIndex = addressFieldOrder.indexOf(rule.field as TAddressField);
+    const fieldIndex = ZAddressField.options.indexOf(rule.field as TAddressField);
     if (fieldIndex >= 0 && fieldIndex < elementValue.length) {
       return elementValue[fieldIndex] ?? "";
     }
   }
 
   if (element.type === TSurveyElementTypeEnum.ContactInfo && Array.isArray(elementValue)) {
-    const contactFieldOrder: TContactInfoField[] = ["firstName", "lastName", "email", "phone", "company"];
-    const fieldIndex = contactFieldOrder.indexOf(rule.field as TContactInfoField);
+    const fieldIndex = ZContactInfoField.options.indexOf(rule.field as TContactInfoField);
     if (fieldIndex >= 0 && fieldIndex < elementValue.length) {
       return elementValue[fieldIndex] ?? "";
     }
@@ -541,10 +518,16 @@ export const validateElementResponse = (
   // Always create translation function from surveys package's i18n instance
   const t: TFunction = getTranslations(languageCode);
 
-  // Check if element is required (separate from validation rules)
-  const requiredError = checkRequiredField(element, value, t);
-  if (requiredError) {
-    errors.push(requiredError);
+  // A One-of group explains an empty answer more precisely than the generic required error,
+  // so it replaces that error when the group itself is what failed.
+  const orRequiredError = validateOrRequiredGroup(element, value, languageCode, t);
+  if (orRequiredError) {
+    errors.push(orRequiredError);
+  } else {
+    const requiredError = checkRequiredField(element, value, t);
+    if (requiredError) {
+      errors.push(requiredError);
+    }
   }
 
   const singleSelectOtherError = validateSingleSelectOtherValue(element, value, languageCode, t);

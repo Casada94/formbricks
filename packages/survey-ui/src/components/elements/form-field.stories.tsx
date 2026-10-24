@@ -204,6 +204,37 @@ export const ContactInfo: Story = {
   },
 };
 
+export const OneOfRequired: Story = {
+  args: {
+    elementId: "form-field-one-of",
+    headline: "How can we reach you?",
+    required: true,
+    requiredLabel: "Required",
+    orGroupHint: "At least one of Email, Phone",
+    fields: [
+      {
+        id: "email",
+        label: "Email",
+        placeholder: "Email",
+        type: "email",
+        required: true,
+        orRequired: true,
+        show: true,
+      },
+      {
+        id: "phone",
+        label: "Phone",
+        placeholder: "Phone",
+        type: "tel",
+        required: true,
+        orRequired: true,
+        show: true,
+      },
+      { id: "company", label: "Company", placeholder: "Company", required: false, show: true },
+    ],
+  },
+};
+
 export const Address: Story = {
   args: {
     elementId: "form-field-address",

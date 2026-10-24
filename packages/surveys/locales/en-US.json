@@ -2,6 +2,7 @@
   "common": {
     "and": "and",
     "apply": "apply",
+    "at_least_one_of": "At least one of {fields}",
     "back": "Back",
     "close_survey": "Close survey",
     "company_logo": "Company Logo",
@@ -63,6 +64,7 @@
       "uploading": "Uploading…",
       "you_can_only_upload_a_maximum_of_files": "You can only upload a maximum of {FILE_LIMIT} files."
     },
+    "fill_in_at_least_one_of": "Please fill in at least one of {fields}",
     "invalid_device_error": {
       "message": "Please disable spam protection in the survey settings to continue using this device.",
       "title": "This device does not support spam protection."

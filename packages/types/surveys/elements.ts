@@ -332,9 +332,13 @@ export const ZSurveyMatrixElement = ZSurveyElementBase.extend({
 export type TSurveyMatrixElement = z.infer<typeof ZSurveyMatrixElement>;
 
 // Address Element
-const ZToggleInputConfig = z.object({
+// `orRequired` marks a field as part of the question's One-of group. Two or more shown fields
+// with it set must have at least one filled in; a respondent may fill in more than one. `required`
+// stays the per-field flag, so a field can be required on its own or only as a member of that group.
+export const ZToggleInputConfig = z.object({
   show: z.boolean(),
   required: z.boolean(),
+  orRequired: z.boolean().optional(),
   placeholder: ZI18nString,
 });
 

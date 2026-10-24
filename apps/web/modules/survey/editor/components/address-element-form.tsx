@@ -12,6 +12,7 @@ import { ElementFormInput } from "@/modules/survey/components/element-form-input
 import { ValidationRulesEditor } from "@/modules/survey/editor/components/validation-rules-editor";
 import { Button } from "@/modules/ui/components/button";
 import { ElementToggleTable } from "@/modules/ui/components/element-toggle-table";
+import { compositeElementIsRequired } from "@/modules/ui/components/element-toggle-table/requirement";
 
 interface AddressElementFormProps {
   localSurvey: TSurvey;
@@ -70,18 +71,16 @@ export const AddressElementForm = ({
   ];
 
   useEffect(() => {
-    const allFieldsAreOptional = [
-      element.addressLine1,
-      element.addressLine2,
-      element.city,
-      element.state,
-      element.zip,
-      element.country,
-    ]
-      .filter((field) => field.show)
-      .every((field) => !field.required);
-
-    updateElement(elementIdx, { required: !allFieldsAreOptional });
+    updateElement(elementIdx, {
+      required: compositeElementIsRequired([
+        element.addressLine1,
+        element.addressLine2,
+        element.city,
+        element.state,
+        element.zip,
+        element.country,
+      ]),
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync-only effect; adding updateElement/elementIdx would loop as it writes back into the survey
   }, [element.addressLine1, element.addressLine2, element.city, element.state, element.zip, element.country]);
 

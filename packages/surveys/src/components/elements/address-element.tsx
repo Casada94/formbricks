@@ -5,6 +5,7 @@ import { type TResponseData, type TResponseTtc } from "@formbricks/types/respons
 import type { TSurveyAddressElement } from "@formbricks/types/surveys/elements";
 import { getLocalizedValue } from "@/lib/i18n";
 import { getUpdatedTtc, useTtc } from "@/lib/ttc";
+import { orRequiredGroupSummary } from "@/lib/validation/composite-required";
 
 interface AddressElementProps {
   element: TSurveyAddressElement;
@@ -74,6 +75,7 @@ export function AddressElement({
       label: element.addressLine1.placeholder[languageCode],
       placeholder: getLocalizedValue(element.addressLine1.placeholder, languageCode),
       required: element.addressLine1.required,
+      orRequired: element.addressLine1.orRequired,
       show: element.addressLine1.show,
     },
     {
@@ -81,6 +83,7 @@ export function AddressElement({
       label: element.addressLine2.placeholder[languageCode],
       placeholder: getLocalizedValue(element.addressLine2.placeholder, languageCode),
       required: element.addressLine2.required,
+      orRequired: element.addressLine2.orRequired,
       show: element.addressLine2.show,
     },
     {
@@ -88,6 +91,7 @@ export function AddressElement({
       label: element.city.placeholder[languageCode],
       placeholder: getLocalizedValue(element.city.placeholder, languageCode),
       required: element.city.required,
+      orRequired: element.city.orRequired,
       show: element.city.show,
     },
     {
@@ -95,6 +99,7 @@ export function AddressElement({
       label: element.state.placeholder[languageCode],
       placeholder: getLocalizedValue(element.state.placeholder, languageCode),
       required: element.state.required,
+      orRequired: element.state.orRequired,
       show: element.state.show,
     },
     {
@@ -102,6 +107,7 @@ export function AddressElement({
       label: element.zip.placeholder[languageCode],
       placeholder: getLocalizedValue(element.zip.placeholder, languageCode),
       required: element.zip.required,
+      orRequired: element.zip.orRequired,
       show: element.zip.show,
     },
     {
@@ -109,9 +115,13 @@ export function AddressElement({
       label: element.country.placeholder[languageCode],
       placeholder: getLocalizedValue(element.country.placeholder, languageCode),
       required: element.country.required,
+      orRequired: element.country.orRequired,
       show: element.country.show,
     },
   ];
+
+  const orSummary = orRequiredGroupSummary(element, languageCode);
+  const orGroupHint = orSummary ? t("common.at_least_one_of", { fields: orSummary }) : undefined;
 
   return (
     <form key={element.id} onSubmit={handleSubmit} className="w-full">
@@ -124,6 +134,7 @@ export function AddressElement({
         onChange={handleChange}
         required={isRequired}
         requiredLabel={t("common.required")}
+        orGroupHint={orGroupHint}
         dir={dir}
         imageUrl={element.imageUrl}
         imageAltText={getLocalizedValue(element.imageAltText, languageCode)}
