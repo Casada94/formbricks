@@ -332,13 +332,27 @@ export const ZSurveyMatrixElement = ZSurveyElementBase.extend({
 export type TSurveyMatrixElement = z.infer<typeof ZSurveyMatrixElement>;
 
 // Address Element
-// `orRequired` marks a field as part of the question's One-of group. Two or more shown fields
-// with it set must have at least one filled in; a respondent may fill in more than one. `required`
-// stays the per-field flag, so a field can be required on its own or only as a member of that group.
+// `orRequired` marks membership in a One-of group. Membership is per group number. Two or more
+// shown fields with the same number must have at least one filled in; a respondent may fill in
+// more than one. A different number is a separate requirement. `required` stays the per-field flag.
+export const OR_REQUIRED_GROUPS = [1, 2, 3, 4, 5] as const;
+export type TOrRequiredGroup = (typeof OR_REQUIRED_GROUPS)[number];
+
+export const orRequiredGroupNumber = (field: {
+  orRequired?: boolean;
+  orRequiredGroup?: number;
+}): TOrRequiredGroup | undefined => {
+  if (!field.orRequired) return undefined;
+  const group = field.orRequiredGroup;
+  if (group === 1 || group === 2 || group === 3 || group === 4 || group === 5) return group;
+  return 1;
+};
+
 export const ZToggleInputConfig = z.object({
   show: z.boolean(),
   required: z.boolean(),
   orRequired: z.boolean().optional(),
+  orRequiredGroup: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]).optional(),
   placeholder: ZI18nString,
 });
 

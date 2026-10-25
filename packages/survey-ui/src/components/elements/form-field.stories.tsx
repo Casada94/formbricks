@@ -210,7 +210,6 @@ export const OneOfRequired: Story = {
     headline: "How can we reach you?",
     required: true,
     requiredLabel: "Required",
-    orGroupHint: "At least one of Email, Phone",
     fields: [
       {
         id: "email",
@@ -219,6 +218,7 @@ export const OneOfRequired: Story = {
         type: "email",
         required: true,
         orRequired: true,
+        orRequiredGroup: 1,
         show: true,
       },
       {
@@ -228,6 +228,25 @@ export const OneOfRequired: Story = {
         type: "tel",
         required: true,
         orRequired: true,
+        orRequiredGroup: 1,
+        show: true,
+      },
+      {
+        id: "firstName",
+        label: "First name",
+        placeholder: "First name",
+        required: true,
+        orRequired: true,
+        orRequiredGroup: 2,
+        show: true,
+      },
+      {
+        id: "lastName",
+        label: "Last name",
+        placeholder: "Last name",
+        required: true,
+        orRequired: true,
+        orRequiredGroup: 2,
         show: true,
       },
       { id: "company", label: "Company", placeholder: "Company", required: false, show: true },

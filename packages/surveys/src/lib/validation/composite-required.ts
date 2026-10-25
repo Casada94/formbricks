@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import type { TResponseDataValue } from "@formbricks/types/responses";
-import type { TSurveyElement } from "@formbricks/types/surveys/elements";
-import { TSurveyElementTypeEnum } from "@formbricks/types/surveys/elements";
+import type { TOrRequiredGroup, TSurveyElement } from "@formbricks/types/surveys/elements";
+import { TSurveyElementTypeEnum, orRequiredGroupNumber } from "@formbricks/types/surveys/elements";
 import type { TValidationError } from "@formbricks/types/surveys/validation-rules";
 import { ZAddressField, ZContactInfoField } from "@formbricks/types/surveys/validation-rules";
 import { getLocalizedValue } from "@/lib/i18n";
@@ -10,6 +10,7 @@ interface TToggleField {
   show: boolean;
   required: boolean;
   orRequired?: boolean;
+  orRequiredGroup?: number;
   placeholder: Parameters<typeof getLocalizedValue>[0];
 }
 
@@ -51,6 +52,7 @@ export interface TOrRequiredField {
   id: string;
   index: number;
   label: string;
+  group: TOrRequiredGroup;
 }
 
 /**
@@ -66,26 +68,49 @@ export const shownOrRequiredFields = (element: TSurveyElement, languageCode: str
 
   return fields.flatMap((field, index) => {
     if (!field.show || !field.orRequired) return [];
+    const group = orRequiredGroupNumber(field);
+    if (group === undefined) return [];
     return [
       {
         id: ids[index],
         index,
         label: stripTrailingLabelColon(getLocalizedValue(field.placeholder, languageCode)),
+        group,
       },
     ];
   });
 };
 
-/**
- * Joined labels of a One-of group of at least two shown fields. `null` when the question has no
- * such group, including when only one shown field is marked One of (that field is required alone).
- */
-export const orRequiredGroupSummary = (element: TSurveyElement, languageCode: string): string | null => {
-  const group = shownOrRequiredFields(element, languageCode);
-  if (group.length < 2) return null;
+export interface TOrRequiredGroupSummary {
+  group: TOrRequiredGroup;
+  summary: string;
+}
 
-  const names = group.map((field) => field.label).filter((label) => label !== "");
-  return (names.length > 0 ? names : group.map((field) => field.id)).join(", ");
+/**
+ * One summary per One-of group of at least two shown fields, ordered by group number.
+ * A group of one is omitted: that field is required on its own.
+ */
+export const orRequiredGroupSummaries = (
+  element: TSurveyElement,
+  languageCode: string
+): TOrRequiredGroupSummary[] => {
+  const buckets = new Map<TOrRequiredGroup, TOrRequiredField[]>();
+  for (const field of shownOrRequiredFields(element, languageCode)) {
+    const bucket = buckets.get(field.group) ?? [];
+    bucket.push(field);
+    buckets.set(field.group, bucket);
+  }
+
+  return [...buckets.entries()]
+    .filter(([, bucket]) => bucket.length >= 2)
+    .sort(([left], [right]) => left - right)
+    .map(([group, bucket]) => {
+      const names = bucket.map((field) => field.label).filter((label) => label !== "");
+      return {
+        group,
+        summary: (names.length > 0 ? names : bucket.map((field) => field.id)).join(", "),
+      };
+    });
 };
 
 const groupHasValue = (group: TOrRequiredField[], value: TResponseDataValue): boolean =>
@@ -101,12 +126,23 @@ export const validateOrRequiredGroup = (
   languageCode: string,
   t: TFunction
 ): TValidationError | null => {
-  const group = shownOrRequiredFields(element, languageCode);
-  if (group.length < 2 || groupHasValue(group, value)) return null;
+  const summaries = orRequiredGroupSummaries(element, languageCode);
+  if (summaries.length === 0) return null;
 
+  const fields = shownOrRequiredFields(element, languageCode);
+  const failing = summaries.filter((summary) => {
+    const members = fields.filter((field) => field.group === summary.group);
+    return !groupHasValue(members, value);
+  });
+  if (failing.length === 0) return null;
+
+  // One error, one sentence per blank group. A newline puts each sentence on its own line.
+  // Two errors would hide every group after the first: the survey shows only the first message.
   return {
     ruleId: "required",
     ruleType: "minLength",
-    message: t("errors.fill_in_at_least_one_of", { fields: orRequiredGroupSummary(element, languageCode) }),
+    message: failing
+      .map((group) => t("errors.fill_in_at_least_one_of", { fields: group.summary }))
+      .join("\n"),
   };
 };

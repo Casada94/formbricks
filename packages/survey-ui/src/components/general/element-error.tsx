@@ -31,6 +31,11 @@ const getElementErrorAria = (inputId: string, errorMessage?: string): ElementErr
 };
 
 function ElementError({ errorMessage, dir = "auto", id }: Readonly<ElementErrorProps>): React.JSX.Element {
+  // A One-of question can fail more than one group. Those sentences are one message separated by
+  // newlines. A flex row collapses that into a single line, so each sentence is its own block.
+  const lines = errorMessage ? errorMessage.split("\n") : [];
+  const multiline = lines.length > 1;
+
   return (
     <>
       {/* Error indicator bar: decorative, so it stays outside the live region (a live region must
@@ -53,12 +58,26 @@ function ElementError({ errorMessage, dir = "auto", id }: Readonly<ElementErrorP
         aria-live="polite"
         aria-atomic="true"
         data-fb-part={errorMessage ? FB_PART.error : undefined}
-        className={errorMessage ? "text-destructive mb-2 flex items-center gap-1 text-sm" : undefined}
+        className={
+          errorMessage
+            ? cn("text-destructive mb-2 flex gap-1 text-sm", multiline ? "items-start" : "items-center")
+            : undefined
+        }
         dir={dir}>
         {errorMessage ? (
           <>
-            <AlertCircle className="size-4" />
-            <span>{errorMessage}</span>
+            <AlertCircle className={cn("size-4 shrink-0", multiline && "mt-0.5")} />
+            {multiline ? (
+              <span className="flex min-w-0 flex-col">
+                {lines.map((line, index) => (
+                  <span key={`${index}:${line}`} className="block">
+                    {line}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className="min-w-0">{errorMessage}</span>
+            )}
           </>
         ) : null}
       </div>

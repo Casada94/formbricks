@@ -6018,7 +6018,12 @@ components:
           type: boolean
         orRequired:
           type: boolean
-          description: When true on two or more shown fields of the same question, the respondent must fill in at least one of those fields and may fill in more than one. A single shown field marked this way is required on its own. Omitted means the field is not part of that group.
+          description: 'When true, this field belongs to a One-of group. Shown fields with the same group number share that requirement: the respondent must fill in at least one of them and may fill in more than one. A group with only one shown field is required on its own. Omitted means the field is not part of a One-of group.'
+        orRequiredGroup:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Which One-of group this field belongs to. Read when orRequired is true. The same number means one group. Omitted means group 1.
         placeholder:
           $ref: '#/components/schemas/TranslatableText'
       additionalProperties: false

@@ -1,8 +1,11 @@
+import { type TOrRequiredGroup, orRequiredGroupNumber } from "@formbricks/types/surveys/elements";
+
 export type TFieldRequirement = "optional" | "required" | "oneOf";
 
 interface TRequirementFlags {
   required: boolean;
   orRequired?: boolean;
+  orRequiredGroup?: number;
 }
 
 /**
@@ -14,10 +17,15 @@ export const fieldRequirement = (field: TRequirementFlags): TFieldRequirement =>
   return field.required ? "required" : "optional";
 };
 
+/** The field's One-of group, or undefined when the field is not One of. Omitted number is group 1. */
+export const fieldRequirementGroup = (field: TRequirementFlags): TOrRequiredGroup | undefined =>
+  orRequiredGroupNumber(field);
+
 export const requirementAttributes = (
-  mode: TFieldRequirement
-): { required: boolean; orRequired: boolean } => {
-  if (mode === "oneOf") return { required: true, orRequired: true };
+  mode: TFieldRequirement,
+  group?: TOrRequiredGroup
+): { required: boolean; orRequired: boolean; orRequiredGroup?: TOrRequiredGroup } => {
+  if (mode === "oneOf") return { required: true, orRequired: true, orRequiredGroup: group ?? 1 };
   if (mode === "required") return { required: true, orRequired: false };
   return { required: false, orRequired: false };
 };

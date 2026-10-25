@@ -962,6 +962,52 @@ describe("validateElementResponse", () => {
       expect(result.valid).toBe(false);
       expect(result.errors.some((error) => error.ruleId === "__implicit_email_field__")).toBe(true);
     });
+
+    test("two groups produce one error until each group has a value", () => {
+      const grouped = {
+        ...element,
+        firstName: {
+          show: true,
+          required: true,
+          orRequired: true,
+          orRequiredGroup: 2,
+          placeholder: { default: "First name" },
+        },
+        lastName: {
+          show: true,
+          required: true,
+          orRequired: true,
+          orRequiredGroup: 2,
+          placeholder: { default: "Last name" },
+        },
+        email: {
+          show: true,
+          required: true,
+          orRequired: true,
+          orRequiredGroup: 1,
+          placeholder: { default: "Email" },
+        },
+        phone: {
+          show: true,
+          required: true,
+          orRequired: true,
+          orRequiredGroup: 1,
+          placeholder: { default: "Phone" },
+        },
+      } as TSurveyContactInfoElement;
+
+      const blank = validateElementResponse(grouped, ["", "", "", "", ""], "en");
+      expect(blank.valid).toBe(false);
+      expect(blank.errors).toHaveLength(1);
+      expect(blank.errors[0].message).toBe("errors.fill_in_at_least_one_of\nerrors.fill_in_at_least_one_of");
+
+      const oneGroup = validateElementResponse(grouped, ["Ada", "", "", "", ""], "en");
+      expect(oneGroup.valid).toBe(false);
+      expect(oneGroup.errors).toHaveLength(1);
+
+      const both = validateElementResponse(grouped, ["Ada", "", "ada@example.com", "", ""], "en");
+      expect(both.valid).toBe(true);
+    });
   });
 
   describe("unknown validation rule type", () => {

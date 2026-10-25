@@ -3,7 +3,7 @@ import { ElementError, getElementErrorAria } from "@/components/general/element-
 import { ElementHeader } from "@/components/general/element-header";
 import { Input } from "@/components/general/input";
 import { Label } from "@/components/general/label";
-import { isFormFieldRequired } from "@/lib/form-field-required";
+import { isFormFieldRequired, realOrRequiredGroup } from "@/lib/form-field-required";
 
 /**
  * Form field configuration
@@ -24,6 +24,8 @@ export interface FormFieldConfig {
    * A single shown member is required on its own.
    */
   orRequired?: boolean;
+  /** One-of group this field belongs to. Omitted on a One-of field means group 1. */
+  orRequiredGroup?: number;
   /** Whether this field should be shown */
   show?: boolean;
 }
@@ -45,11 +47,6 @@ interface FormFieldProps {
   required?: boolean;
   /** Custom label for the required indicator */
   requiredLabel?: string;
-  /**
-   * Shown when two or more fields belong to a One-of group, so the respondent knows any one of
-   * them satisfies the question. The One-of inputs point at it with aria-describedby.
-   */
-  orGroupHint?: string;
   /** Error message to display */
   errorMessage?: string;
   /** Text direction: 'ltr' (left-to-right), 'rtl' (right-to-left), or 'auto' (auto-detect from content) */
@@ -73,7 +70,6 @@ function FormField({
   onChange,
   required = false,
   requiredLabel,
-  orGroupHint,
   errorMessage,
   dir = "auto",
   disabled = false,
@@ -106,7 +102,6 @@ function FormField({
   // a confidently wrong description, which is worse than none. The inputs still expose
   // aria-invalid, so the state is conveyed, and the live region announces the message itself.
   const errorAria = getElementErrorAria(elementId, errorMessage);
-  const orHintId = `${elementId}-or-requirement`;
 
   return (
     <div className="w-full space-y-4" id={elementId} dir={dir}>
@@ -121,18 +116,13 @@ function FormField({
         videoUrl={videoUrl}
       />
 
-      {orGroupHint ? (
-        <p id={orHintId} className="label-description">
-          {orGroupHint}
-        </p>
-      ) : null}
-
       {/* Form Fields */}
       <div className="relative" data-element-input>
         <ElementError errorMessage={errorMessage} dir={dir} id={errorAria.errorId} />
         <div className="space-y-3">
           {visibleFields.map((field) => {
             const fieldRequired = isFormFieldRequired(field, fields, required);
+            const groupMarker = realOrRequiredGroup(field, fields);
             const fieldValue = currentValues[field.id] ?? "";
             const fieldInputId = `${elementId}-${field.id}`;
 
@@ -147,7 +137,10 @@ function FormField({
             return (
               <div key={field.id} className="space-y-2">
                 <Label htmlFor={fieldInputId} variant="default">
-                  {fieldRequired ? `${field.label}*` : field.label}
+                  <span>
+                    {field.label}
+                    {groupMarker !== undefined ? <sup>{`*${groupMarker}`}</sup> : fieldRequired ? "*" : null}
+                  </span>
                 </Label>
                 <Input
                   id={fieldInputId}
@@ -160,7 +153,6 @@ function FormField({
                   disabled={disabled}
                   dir={dir}
                   aria-invalid={errorAria.ariaInvalid || undefined}
-                  aria-describedby={field.orRequired && orGroupHint ? orHintId : undefined}
                 />
               </div>
             );

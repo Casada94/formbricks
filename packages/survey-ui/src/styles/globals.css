@@ -339,6 +339,19 @@
   opacity: var(--fb-label-opacity);
 }
 
+/*
+ * A One-of group marker is the whole `*N` in a <sup> at the end of the label.
+ * The rule above sets font-size on every descendant, which would flatten that
+ * superscript back to the label size. This selector is more specific.
+ */
+#fbjs .label-default sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.5em;
+}
+
 #fbjs .label-card,
 #fbjs .label-card * {
   font-family: var(--fb-element-upper-label-font-family);

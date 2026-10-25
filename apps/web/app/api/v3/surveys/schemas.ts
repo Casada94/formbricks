@@ -613,7 +613,7 @@ function isElementTypeWithStrictKeys(type: string): type is ElementTypeWithStric
 }
 const LABEL_CHOICE_KEYS = new Set(["id", "label"]);
 const PICTURE_CHOICE_KEYS = new Set(["id", "imageUrl", "imageAltText"]);
-const TOGGLE_INPUT_KEYS = new Set(["show", "required", "orRequired", "placeholder"]);
+const TOGGLE_INPUT_KEYS = new Set(["show", "required", "orRequired", "orRequiredGroup", "placeholder"]);
 const CHAR_LIMIT_KEYS = new Set(["enabled", "min", "max"]);
 const VALIDATION_KEYS = new Set(["rules", "logic"]);
 const VALIDATION_RULE_KEYS = new Set(["id", "type", "params", "field"]);
